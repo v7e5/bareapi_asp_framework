@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)/$(MSBuildToolsVersion)/Microsoft.Common.props"/>
+  <PropertyGroup>
+    <AssemblyName>api</AssemblyName>
+    <Configuration>Release</Configuration>
+    <DebugType>none</DebugType>
+    <Optimize>true</Optimize>
+    <OutputType>Exe</OutputType>
+    <OutputPath>bin\Release</OutputPath>
+    <PlatformTarget>x64</PlatformTarget>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="app.config"/>
+    <None Include="app_settings.config">
+      <Link>app_settings.config</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="connection_strings.config">
+      <Link>connection_strings.config</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <Compile Include="api.cs"/>
+  </ItemGroup>
+
+  <Import Project="$(MSBuildToolsPath)/Microsoft.CSharp.targets"/>
+</Project>
