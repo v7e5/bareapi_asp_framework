@@ -15,6 +15,7 @@ req() {
   [[ ! -f ${cke} ]] && touch ${cke}
 
   local a=(
+    'login'
     now
     hailstone
     'env'
@@ -57,11 +58,10 @@ xxx() {
 }
 
 update() {
-  nuget install Microsoft.Data.SqlClient -OutputDirectory packages/sq
+  nuget install Microsoft.AspNet.WebApi.Owin -OutputDirectory packages
   exit
   nuget install Microsoft.Owin.Hosting -OutputDirectory packages
   nuget install Microsoft.Owin.Host.HttpListener -OutputDirectory packages
-  nuget install Microsoft.AspNet.WebApi.Owin -OutputDirectory packages
 }
 
 typeset -A opts

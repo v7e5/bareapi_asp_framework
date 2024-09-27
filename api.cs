@@ -1,14 +1,16 @@
+using auth;
 using static util.Util;
 using static System.Configuration.ConfigurationManager;
-
 using System;
+using System.Net;
 using System.Linq;
+using System.Net.Http;
 using System.Web.Http;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Net.Http.Formatting;
-
+using System.ComponentModel.DataAnnotations;
 using Owin;
 using Newtonsoft.Json.Linq;
 using Microsoft.Owin.Hosting;
@@ -39,17 +41,17 @@ sealed class Startup {
     config.Formatters.Clear();
     config.Formatters.Add(new JsonMediaTypeFormatter());
 
-    //app.Use(async (ctx, next) => {
-    //  if((ctx.Request.Path.ToString() == "/login")
-    //    || (await Auth.SessionUser(ctx.Request.Cookies["_id"]) != null)) {
-    //    await next();
-    //  } else {
-    //    ctx.Response.StatusCode = 403;
-    //    ctx.Response.ReasonPhrase = "Not Authorized";
-    //    ctx.Response.ContentType = "application/json";
-    //    await ctx.Response.WriteAsync("{\"error\": \"not logged in\"}");
-    //  }
-    //});
+    app.Use(async (ctx, next) => {
+      if((await Auth.SessionUser(ctx.Request.Cookies["_id"]) != null)
+        || noauth.Contains(ctx.Request.Path.ToString().Substring(1))) {
+        await next();
+      } else {
+        ctx.Response.StatusCode = 403;
+        ctx.Response.ReasonPhrase = "Not Authorized";
+        ctx.Response.ContentType = "application/json";
+        await ctx.Response.WriteAsync("{\"error\": \"verboten\"}");
+      }
+    });
 
     config.EnsureInitialized();
     app.UseWebApi(config);
@@ -80,7 +82,6 @@ public sealed class XXXController: ApiController {
   public IHttpActionResult _hailstone(JObject o) =>
     Ok((o.Value<int>("n") is int n && n > 0) ? collatz(new int[]{n}) : null);
 
-
   [HttpPost]
   [Route("now")]
   public async Task<IHttpActionResult> _now() {
@@ -106,17 +107,41 @@ public sealed class XXXController: ApiController {
     var ut = DateTimeOffset.UtcNow;
 
     return Ok(new {
-      user = "",
+      user = await Auth.SessionUser(Request),
       server = new {
         tz = TimeZoneInfo.Local.DisplayName,
         local = ut.ToLocalTime().ToString(),
         unix_timestamp = ut.ToUnixTimeSeconds(),
         unix_timestamp_str = ut.ToString()
       },
-      database,
-      ng = new NonGen().Cast<int>(),
-      cg = new ConGen()
+      database
     });
   }
 
+  [HttpPost]
+  [Route("login")]
+  public async Task<HttpResponseMessage> _login(ModelLogin l) {
+    if (await Auth.SessionUser(Request) != null) {
+      return Request.CreateResponse(HttpStatusCode.OK);
+    }
+
+    if (!ModelState.IsValid) {
+      return Request.CreateResponse(
+        HttpStatusCode.Forbidden,
+        ModelState
+          .Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage))
+          .Where(e => e != "")
+      );
+    }
+
+    return Request.CreateResponse(HttpStatusCode.OK);
+  }
+}
+
+public struct ModelLogin {
+  [Required(ErrorMessage = "username cannot be blank")]
+  public string username {get; set;}
+
+  [Required(ErrorMessage = "password cannot be blank")]
+  public string password {get; set;}
 }
