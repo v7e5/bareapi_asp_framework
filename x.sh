@@ -15,8 +15,8 @@ req() {
   [[ ! -f ${cke} ]] && touch ${cke}
 
   local a=(
-    'login'
     now
+    'login'
     hailstone
     'env'
     'echo'
@@ -58,8 +58,8 @@ xxx() {
 }
 
 update() {
-  nuget install Microsoft.AspNet.WebApi.Owin -OutputDirectory packages
   exit
+  nuget install Microsoft.AspNet.WebApi.Owin -OutputDirectory packages
   nuget install Microsoft.Owin.Hosting -OutputDirectory packages
   nuget install Microsoft.Owin.Host.HttpListener -OutputDirectory packages
 }
