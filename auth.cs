@@ -23,7 +23,7 @@ namespace auth {
         using (var cmd = conn.CreateCommand()) {
           cmd.CommandText = "select userid from session where token=@key";
           cmd.Parameters.Add(
-            new SqlParameter("key", SqlDbType.Char, 36) {Value = key});
+            new SqlParameter("key", SqlDbType.Char, 36){Value = key});
 
           return (int?) await cmd.ExecuteScalarAsync();
         }
@@ -35,7 +35,7 @@ namespace auth {
         request.Headers.GetCookies("_id").FirstOrDefault()?["_id"].Value);
     }
 
-    public static async void SessionClear(int? userid) {
+    public static async void SessionClear(int userid) {
       using (var conn =
         new SqlConnection(ConnectionStrings["dbconn"].ConnectionString)) {
         await conn.OpenAsync();
@@ -43,7 +43,7 @@ namespace auth {
         using (var cmd = conn.CreateCommand()) {
           cmd.CommandText = "delete from session where userid=@userid";
           cmd.Parameters.Add(
-            new SqlParameter("userid", SqlDbType.Int) {Value = userid});
+            new SqlParameter("userid", SqlDbType.Int){Value = userid});
           await cmd.ExecuteNonQueryAsync();
         }
       }
@@ -55,7 +55,7 @@ namespace auth {
       }
     }
 
-    public static async Task<string> SessionSet(int? userid) {
+    public static async Task<string> SessionSet(int userid) {
       if (userid == null) {
         return null;
       }
@@ -72,7 +72,7 @@ namespace auth {
           using (var cmd = conn.CreateCommand()) {
             cmd.CommandText = q;
             cmd.Parameters.Add(
-              new SqlParameter("key", SqlDbType.Char, 36) { Value = g });
+              new SqlParameter("key", SqlDbType.Char, 36){Value = g});
 
             if (await cmd.ExecuteScalarAsync() == null) {
               guid = g;
@@ -81,9 +81,9 @@ namespace auth {
                 sess_add.CommandText =
                   "insert into session(token, userid) values (@key, @userid)";
                 sess_add.Parameters.Add(
-                  new SqlParameter("key", SqlDbType.Char, 36) {Value = g});
+                  new SqlParameter("key", SqlDbType.Char, 36){Value = g});
                 sess_add.Parameters.Add(
-                  new SqlParameter("userid", SqlDbType.Int) {Value = userid});
+                  new SqlParameter("userid", SqlDbType.Int){Value = userid});
                 await sess_add.ExecuteNonQueryAsync();
               }
 

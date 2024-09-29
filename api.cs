@@ -131,8 +131,65 @@ public sealed class XXXController: ApiController {
       );
     }
 
-    return Request.CreateResponse(HttpStatusCode.OK);
+    IDictionary<string, object> user;
+
+    using (var conn = new SqlConnection(
+      ConnectionStrings["dbconn"].ConnectionString)) {
+      await conn.OpenAsync();
+
+      using (var user_cmd = conn.CreateCommand()) {
+        user_cmd.CommandText
+          = "select id, passwd from usuario where username=@u";
+        user_cmd.Parameters.Add(
+            new SqlParameter("u", SqlDbType.Text){Value = login.username});
+
+        user = (await cmd.ExecuteReaderAsync()).ToDictArray().FirstOrDefault();
+      }
+    }
+
+    if(user is null
+      || (user["passwd"]?.ToString()?.Split(':') is string[] arr
+        && !FixedTimeEquals(
+              deriveKey(
+                password: login.passwd!,
+                salt: Convert.FromBase64String(arr[0])
+              ),
+              Convert.FromBase64String(arr[1])
+            ))
+      ) {
+      return Request.CreateResponse(
+        HttpStatusCode.Forbidden,
+        new {error = "incorrect user/pass"}
+      );
+    }
+
+    int userid = user["id"];
+    await Auth.SessionClear(userid);
+    var response = Request.CreateResponse(HttpStatusCode.OK);
+
+    response.Headers.Add("set-cookie", "_id="
+      + await Auth.SessionSet(userid)
+      + ";domain=" + AppSettings["host"]
+      + ";path=/;httponly;samesite=lax;max-age=604800"
+    );
+
+    return response;
   }
+
+  [HttpPost]
+  [Route("logout")]
+  public async Task<HttpResponseMessage> _logout() {
+    await Auth.SessionClear(await Auth.SessionUser(Request));
+    var response = Request.CreateResponse(HttpStatusCode.OK);
+
+    response.Headers.Add("set-cookie", "_id="
+      + ";domain=" + AppSettings["host"]
+      + ";path=/;httponly;samesite=lax;max-age=0"
+    );
+
+    return response;
+  }
+
 }
 
 public struct ModelLogin {
@@ -140,5 +197,5 @@ public struct ModelLogin {
   public string username {get; set;}
 
   [Required(ErrorMessage = "password cannot be blank")]
-  public string password {get; set;}
+  public string passwd {get; set;}
 }
