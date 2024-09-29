@@ -6,7 +6,6 @@ using System.Collections.Generic;
 
 namespace util {
   static class Util {
-
     public static void cl<T>(T x) {
       Console.WriteLine(x);
     }

@@ -12,7 +12,7 @@ namespace auth {
   static class Auth {
 
     public static async Task<int?> SessionUser(string key) {
-      if(key == null) {
+      if (key == null) {
         return null;
       }
 
@@ -20,12 +20,12 @@ namespace auth {
         ConnectionStrings["dbconn"].ConnectionString)) {
         await conn.OpenAsync();
 
-        using(var cmd = conn.CreateCommand()) {
+        using (var cmd = conn.CreateCommand()) {
           cmd.CommandText = "select userid from session where token=@key";
           cmd.Parameters.Add(
-            new SqlParameter("key", SqlDbType.Char, 36){Value = key});
+            new SqlParameter("key", SqlDbType.Char, 36) {Value = key});
 
-          return  (int?) await cmd.ExecuteScalarAsync();
+          return (int?) await cmd.ExecuteScalarAsync();
         }
       }
     }
@@ -36,28 +36,27 @@ namespace auth {
     }
 
     public static async void SessionClear(int? userid) {
-      using (var conn = new SqlConnection(
-            ConnectionStrings["dbconn"].ConnectionString)) {
+      using (var conn =
+        new SqlConnection(ConnectionStrings["dbconn"].ConnectionString)) {
         await conn.OpenAsync();
 
-        using(var cmd = conn.CreateCommand()) {
+        using (var cmd = conn.CreateCommand()) {
           cmd.CommandText = "delete from session where userid=@userid";
           cmd.Parameters.Add(
-            new SqlParameter("userid", SqlDbType.Int){Value = userid});
-
+            new SqlParameter("userid", SqlDbType.Int) {Value = userid});
           await cmd.ExecuteNonQueryAsync();
         }
       }
     }
 
     static IEnumerable<string> _guid() {
-      while(true) {
+      while (true) {
         yield return System.Guid.NewGuid().ToString();
       }
     }
 
     public static async Task<string> SessionSet(int? userid) {
-      if(userid == null) {
+      if (userid == null) {
         return null;
       }
 
@@ -69,27 +68,25 @@ namespace auth {
 
         var q = "select token from session where token=@key";
 
-        foreach(var g in _guid()) {
-          using(var cmd = conn.CreateCommand()) {
+        foreach (var g in _guid()) {
+          using (var cmd = conn.CreateCommand()) {
             cmd.CommandText = q;
             cmd.Parameters.Add(
-              new SqlParameter("key", SqlDbType.Char, 36){Value = g});
+              new SqlParameter("key", SqlDbType.Char, 36) { Value = g });
 
-            if(await cmd.ExecuteScalarAsync() == null) {
+            if (await cmd.ExecuteScalarAsync() == null) {
               guid = g;
 
-              using(var sess_add = conn.CreateCommand()) {
+              using (var sess_add = conn.CreateCommand()) {
                 sess_add.CommandText =
                   "insert into session(token, userid) values (@key, @userid)";
-
                 sess_add.Parameters.Add(
-                  new SqlParameter("key", SqlDbType.Char, 36){Value = g});
-
+                  new SqlParameter("key", SqlDbType.Char, 36) {Value = g});
                 sess_add.Parameters.Add(
-                  new SqlParameter("userid", SqlDbType.Int){Value = userid});
-
+                  new SqlParameter("userid", SqlDbType.Int) {Value = userid});
                 await sess_add.ExecuteNonQueryAsync();
               }
+
               break;
             }
           }
@@ -98,6 +95,5 @@ namespace auth {
 
       return guid;
     }
-
   }
 }

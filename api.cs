@@ -37,12 +37,11 @@ sealed class Startup {
   public void Configuration(IAppBuilder app) {
     var config = new HttpConfiguration();
     config.MapHttpAttributeRoutes();
-
     config.Formatters.Clear();
     config.Formatters.Add(new JsonMediaTypeFormatter());
 
     app.Use(async (ctx, next) => {
-      if((await Auth.SessionUser(ctx.Request.Cookies["_id"]) != null)
+      if ((await Auth.SessionUser(ctx.Request.Cookies["_id"]) != null)
         || noauth.Contains(ctx.Request.Path.ToString().Substring(1))) {
         await next();
       } else {
@@ -52,14 +51,12 @@ sealed class Startup {
         await ctx.Response.WriteAsync("{\"error\": \"verboten\"}");
       }
     });
-
     config.EnsureInitialized();
     app.UseWebApi(config);
   }
 }
 
 public sealed class XXXController: ApiController {
-
   [HttpPost]
   [Route("env")]
   public async Task<IHttpActionResult> _env() =>
@@ -68,7 +65,7 @@ public sealed class XXXController: ApiController {
   [HttpPost]
   [Route("echo")]
   public async Task<IHttpActionResult> _echo(JObject o) {
-    if(o.Value<int>("delay") is int n && n > 0) {
+    if (o.Value<int>("delay") is int n && n > 0) {
       await Task.Delay(n);
     }
 
@@ -85,13 +82,13 @@ public sealed class XXXController: ApiController {
   [HttpPost]
   [Route("now")]
   public async Task<IHttpActionResult> _now() {
+    IDictionary<string, object> database;
 
-    IDictionary<string,object> database;
     using (var conn = new SqlConnection(
       ConnectionStrings["dbconn"].ConnectionString)) {
       await conn.OpenAsync();
 
-      using(var cmd = conn.CreateCommand()) {
+      using (var cmd = conn.CreateCommand()) {
         cmd.CommandText = @"
           select
           current_timezone() as tz,

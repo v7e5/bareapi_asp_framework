@@ -14,9 +14,9 @@ sealed class NonGen: System.Collections.IEnumerable {
     NonGen collection;
     int currentIndex = -1;
 
-    public Rator (NonGen items) => this.collection = items;
+    public Rator(NonGen items) => this.collection = items;
 
-    public object Current => collection.data [currentIndex];
+    public object Current => collection.data[currentIndex];
 
     public bool MoveNext() {
       cl($"nongen move {currentIndex}");
@@ -27,7 +27,7 @@ sealed class NonGen: System.Collections.IEnumerable {
     public void Reset() => currentIndex = -1;
 
     void IDisposable.Dispose() {
-      cl("nongen dispose"); 
+      cl("nongen dispose");
     }
   }
 }
@@ -45,22 +45,22 @@ sealed class ConGen: IEnumerable<char> {
     ConGen collection;
     int currentIndex = -1;
 
-    public Rator (ConGen items) => this.collection = items;
+    public Rator(ConGen items) => this.collection = items;
 
     public bool MoveNext() {
       cl($"congen move {currentIndex}");
       return ++currentIndex < collection.data.Length;
     }
 
-    public char Current => collection.data [currentIndex];
+    public char Current => collection.data[currentIndex];
 
     public void Reset() => currentIndex = -1;
 
     void IDisposable.Dispose() {
-      cl("congen dispose"); 
+      cl("congen dispose");
     }
 
     object System.Collections.IEnumerator.Current =>
-      throw new Exception("non gen n/a");
+    throw new Exception("non gen n/a");
   }
 }
