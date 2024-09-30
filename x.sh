@@ -11,12 +11,18 @@ qe='{
   "x": [1, 2, "3", "x"]
 }'
 
+ql='{
+  "username": "admin",
+  "passwd" : "forget"
+}'
+
 req() {
   [[ ! -f ${cke} ]] && touch ${cke}
 
   local a=(
-    now
     'login'
+    'logout'
+    now
     hailstone
     'env'
     'echo'

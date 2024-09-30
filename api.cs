@@ -3,6 +3,7 @@ using static util.Util;
 using static System.Configuration.ConfigurationManager;
 using System;
 using System.Net;
+using System.Data;
 using System.Linq;
 using System.Net.Http;
 using System.Web.Http;
@@ -43,14 +44,17 @@ sealed class Startup {
     app.Use(async (ctx, next) => {
       if ((await Auth.SessionUser(ctx.Request.Cookies["_id"]) != null)
         || noauth.Contains(ctx.Request.Path.ToString().Substring(1))) {
+        cl($"[;38;5;27;1m[{ctx.Request.Path}][0m");
         await next();
       } else {
+        cl($"[;38;5;9;1m[{ctx.Request.Path}][0m");
         ctx.Response.StatusCode = 403;
         ctx.Response.ReasonPhrase = "Not Authorized";
         ctx.Response.ContentType = "application/json";
         await ctx.Response.WriteAsync("{\"error\": \"verboten\"}");
       }
     });
+
     config.EnsureInitialized();
     app.UseWebApi(config);
   }
@@ -117,7 +121,7 @@ public sealed class XXXController: ApiController {
 
   [HttpPost]
   [Route("login")]
-  public async Task<HttpResponseMessage> _login(ModelLogin l) {
+  public async Task<HttpResponseMessage> _login(ModelLogin login) {
     if (await Auth.SessionUser(Request) != null) {
       return Request.CreateResponse(HttpStatusCode.OK);
     }
@@ -141,9 +145,10 @@ public sealed class XXXController: ApiController {
         user_cmd.CommandText
           = "select id, passwd from usuario where username=@u";
         user_cmd.Parameters.Add(
-            new SqlParameter("u", SqlDbType.Text){Value = login.username});
+            new SqlParameter("u", SqlDbType.VarChar){Value = login.username});
 
-        user = (await cmd.ExecuteReaderAsync()).ToDictArray().FirstOrDefault();
+        user = (await user_cmd.ExecuteReaderAsync())
+          .ToDictArray().FirstOrDefault();
       }
     }
 
@@ -151,7 +156,7 @@ public sealed class XXXController: ApiController {
       || (user["passwd"]?.ToString()?.Split(':') is string[] arr
         && !FixedTimeEquals(
               deriveKey(
-                password: login.passwd!,
+                password: login.passwd,
                 salt: Convert.FromBase64String(arr[0])
               ),
               Convert.FromBase64String(arr[1])
@@ -163,8 +168,8 @@ public sealed class XXXController: ApiController {
       );
     }
 
-    int userid = user["id"];
-    await Auth.SessionClear(userid);
+    int userid = (int) user["id"];
+    Auth.SessionClear(userid);
     var response = Request.CreateResponse(HttpStatusCode.OK);
 
     response.Headers.Add("set-cookie", "_id="
@@ -179,7 +184,7 @@ public sealed class XXXController: ApiController {
   [HttpPost]
   [Route("logout")]
   public async Task<HttpResponseMessage> _logout() {
-    await Auth.SessionClear(await Auth.SessionUser(Request));
+    Auth.SessionClear(await Auth.SessionUser(Request));
     var response = Request.CreateResponse(HttpStatusCode.OK);
 
     response.Headers.Add("set-cookie", "_id="
