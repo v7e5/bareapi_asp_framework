@@ -32,7 +32,7 @@ sealed class XXX {
 
 sealed class Startup {
   private static readonly string[] noauth = {
-    "login", "hailstone", "echo", "env", "now"
+    "login", "hailstone", "ecco", "env", "now"
   }; 
 
   public void Configuration(IAppBuilder app) {
@@ -67,7 +67,7 @@ public sealed class XXXController: ApiController {
     Ok(await Task.Run(() => env()));
 
   [HttpPost]
-  [Route("echo")]
+  [Route("ecco")]
   public async Task<IHttpActionResult> _echo(JObject o) {
     if (o.Value<int>("delay") is int n && n > 0) {
       await Task.Delay(n);
@@ -76,6 +76,13 @@ public sealed class XXXController: ApiController {
     return Ok(
       new {t = DateTimeOffset.UtcNow.ToLocalTime().ToString(), o}
     );
+  }
+
+  [HttpPost]
+  [Route("userid")]
+  public async Task<IHttpActionResult> _session_user() {
+    var userid = await Auth.SessionUser(Request);
+    return Ok(new {userid});
   }
 
   [HttpPost]
